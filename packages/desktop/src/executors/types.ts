@@ -3,7 +3,7 @@
  * Inspired by vibe-kanban's executor architecture
  */
 
-import type { IPty } from '@homebridge/node-pty-prebuilt-multiarch';
+import type { IPty } from 'node-pty';
 import type { ChildProcessWithoutNullStreams } from 'child_process';
 
 // ============================================================================

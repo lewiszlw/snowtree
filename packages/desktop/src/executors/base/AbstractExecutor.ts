@@ -5,7 +5,7 @@
 
 import { EventEmitter } from 'events';
 import { randomUUID } from 'crypto';
-import * as pty from '@homebridge/node-pty-prebuilt-multiarch';
+import * as pty from 'node-pty';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';

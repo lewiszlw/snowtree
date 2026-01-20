@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import * as pty from '@homebridge/node-pty-prebuilt-multiarch';
+import * as pty from 'node-pty';
 import { getShellPath } from '../../infrastructure/command/shellPath';
 import { ShellDetector } from '../../infrastructure/command/shellDetector';
 import * as os from 'os';

@@ -18,14 +18,14 @@
     "onlyBuiltDependencies": [
       "electron",
       "better-sqlite3",
-      "@homebridge/node-pty-prebuilt-multiarch",
+      "node-pty",
       "esbuild",
       "msgpackr-extract"
     ]
   },
   "scripts": {
     "predev": "pnpm --filter @snowtree/core build",
-    "dev": "NO_PROXY=localhost,127.0.0.1 concurrently \"pnpm --filter @snowtree/desktop dev\" \"pnpm --filter @snowtree/ui dev\" \"wait-on http://localhost:4521 && node tools/scripts/run-electron-dev.mjs\"",
+    "dev": "cross-env NO_PROXY=localhost,127.0.0.1 concurrently \"pnpm --filter @snowtree/desktop dev\" \"pnpm --filter @snowtree/ui dev\" \"wait-on http://localhost:4521 && node tools/scripts/run-electron-dev.mjs\"",
     "build": "pnpm --filter @snowtree/core build && pnpm --filter @snowtree/desktop build && pnpm --filter @snowtree/ui build && pnpm run build:electron",
     "build:desktop": "pnpm --filter @snowtree/desktop build",
     "build:ui": "pnpm --filter @snowtree/ui build",
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^2.0.0",
-    "@homebridge/node-pty-prebuilt-multiarch": "^0.12.0",
+    "node-pty": "^1.0.0",
     "@snowtree/core": "workspace:*",
     "better-sqlite3": "^11.7.0",
     "bull": "^4.16.3",
@@ -51,6 +51,7 @@
     "@electron/rebuild": "^4.0.1",
     "@playwright/test": "^1.52.0",
     "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
     "electron": "^37.6.0",
     "electron-builder": "^26.0.20",
     "node-abi": "^4.14.0",

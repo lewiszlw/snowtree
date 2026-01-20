@@ -121,10 +121,13 @@ if (process.platform === 'darwin') {
   patchMacDevApp();
 } else {
   // Default cross-platform dev launcher.
-  const child = spawn('electron', ['.', '--snowtree-dev'], {
+  // Use electron from node_modules to avoid PATH issues on Windows
+  const electronPath = path.join(projectRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'electron.cmd' : 'electron');
+  const child = spawn(electronPath, ['.', '--snowtree-dev'], {
     env: { ...process.env, NODE_ENV: 'development' },
     stdio: 'inherit',
-    detached: false
+    detached: false,
+    shell: process.platform === 'win32'
   });
 
   child.on('close', (code) => {

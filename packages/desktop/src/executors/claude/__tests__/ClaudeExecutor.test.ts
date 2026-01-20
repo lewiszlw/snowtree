@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock node-pty before importing ClaudeExecutor
-vi.mock('@homebridge/node-pty-prebuilt-multiarch', () => ({
+vi.mock('node-pty', () => ({
   default: {
     spawn: vi.fn(),
   },
