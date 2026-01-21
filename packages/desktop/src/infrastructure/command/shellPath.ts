@@ -409,9 +409,10 @@ export function findExecutableInPath(executable: string): string | null {
   const paths = shellPath.split(pathSep);
   const isWindows = process.platform === 'win32';
 
-  // On Windows, executables might have .exe, .cmd, or .bat extensions
+  // On Windows, prioritize .exe and .cmd over extensionless files
+  // because pty.spawn cannot execute extensionless shell scripts directly
   const executableNames = isWindows
-    ? [executable, `${executable}.exe`, `${executable}.cmd`, `${executable}.bat`]
+    ? [`${executable}.exe`, `${executable}.cmd`, `${executable}.bat`, executable]
     : [executable];
 
   for (const dir of paths) {

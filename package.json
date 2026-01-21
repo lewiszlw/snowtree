@@ -40,11 +40,11 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-code": "^2.0.0",
-    "node-pty": "^1.0.0",
     "@snowtree/core": "workspace:*",
     "better-sqlite3": "^11.7.0",
     "bull": "^4.16.3",
     "electron-updater": "^6.6.2",
+    "node-pty": "^1.0.0",
     "web-streams-polyfill": "^3.3.3"
   },
   "devDependencies": {
@@ -52,7 +52,7 @@
     "@playwright/test": "^1.52.0",
     "concurrently": "^9.1.0",
     "cross-env": "^7.0.3",
-    "electron": "^37.6.0",
+    "electron": "^37.10.3",
     "electron-builder": "^26.0.20",
     "node-abi": "^4.14.0",
     "playwright": "^1.52.0",

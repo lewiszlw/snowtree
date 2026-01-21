@@ -135,6 +135,16 @@ export abstract class AbstractExecutor extends EventEmitter {
       this.logger?.info(`[${this.getCommandName()}] Using custom path: ${customPath}`);
       return customPath;
     }
+    
+    // Try to find the executable in PATH (important for Windows to get .cmd/.exe extension)
+    const { findExecutableInPath } = await import('../../infrastructure/command/shellPath');
+    const foundPath = findExecutableInPath(this.getCommandName());
+    if (foundPath) {
+      this.logger?.verbose?.(`[${this.getCommandName()}] Found in PATH: ${foundPath}`);
+      return foundPath;
+    }
+    
+    // Fallback to command name
     return this.getCommandName();
   }
 
@@ -326,6 +336,18 @@ export abstract class AbstractExecutor extends EventEmitter {
     let lastError: unknown;
     const toolName = this.getToolName().toLowerCase();
     const needsNodeFallbackKey = `${toolName}NeedsNodeFallback`;
+    const isWindows = os.platform() === 'win32';
+
+    // On Windows, .cmd/.bat files need to be run through cmd.exe
+    // These are batch scripts, NOT Node.js modules, so never use Node.js fallback for them
+    const isWindowsBatchFile = isWindows && (command.endsWith('.cmd') || command.endsWith('.bat'));
+    let actualCommand = command;
+    let actualArgs = args;
+    if (isWindowsBatchFile) {
+      actualCommand = 'cmd.exe';
+      actualArgs = ['/c', command, ...args];
+      this.logger?.verbose(`Windows: wrapping command with cmd.exe /c`);
+    }
 
     while (attempt < 2) {
       try {
@@ -334,8 +356,12 @@ export abstract class AbstractExecutor extends EventEmitter {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        if (attempt === 0 && !(global as unknown as Record<string, boolean>)[needsNodeFallbackKey]) {
-          ptyProcess = pty.spawn(command, args, {
+        // Skip Node.js fallback for Windows batch files - they are not Node.js modules
+        const useNodeFallback = !isWindowsBatchFile && 
+          (attempt > 0 || (global as unknown as Record<string, boolean>)[needsNodeFallbackKey]);
+
+        if (!useNodeFallback) {
+          ptyProcess = pty.spawn(actualCommand, actualArgs, {
             name: 'xterm-color',
             cols: 80,
             rows: 30,
@@ -343,7 +369,7 @@ export abstract class AbstractExecutor extends EventEmitter {
             env,
           });
         } else {
-          // Node.js fallback
+          // Node.js fallback - only for Unix systems or .js files
           this.logger?.verbose(`Using Node.js fallback for ${this.getToolName()}`);
           const nodePath = await findNodeExecutable();
           const nodeArgs = ['--no-warnings', '--enable-source-maps', command, ...args];
@@ -360,6 +386,11 @@ export abstract class AbstractExecutor extends EventEmitter {
       } catch (error) {
         lastError = error;
         attempt++;
+
+        // Don't retry for Windows batch files - if cmd.exe /c fails, Node.js fallback won't help
+        if (isWindowsBatchFile) {
+          break;
+        }
 
         if (attempt === 1) {
           const errorMsg = error instanceof Error ? error.message : String(error);

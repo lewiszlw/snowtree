@@ -41,25 +41,43 @@ export class ShellDetector {
   }
 
   private static detectWindowsShell(): ShellInfo {
-    // Check for PowerShell Core first
+    // Check for PowerShell Core first (pwsh.exe)
     const pwshPath = this.findExecutable('pwsh.exe');
     if (pwshPath) {
-      return { path: pwshPath, name: 'pwsh' };
+      return { path: pwshPath, name: 'pwsh', args: ['-NoExit', '-NoLogo'] };
     }
 
-    // Check for Windows PowerShell
+    // Check common PowerShell Core installation paths
+    const pwshCommonPaths = [
+      path.join(process.env.PROGRAMFILES || 'C:\\Program Files', 'PowerShell', '7', 'pwsh.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'PowerShell', '7', 'pwsh.exe'),
+    ];
+    for (const pwshCommon of pwshCommonPaths) {
+      if (fs.existsSync(pwshCommon)) {
+        return { path: pwshCommon, name: 'pwsh', args: ['-NoExit', '-NoLogo'] };
+      }
+    }
+
+    // Check for Windows PowerShell (built-in)
     const powershellPath = this.findExecutable('powershell.exe');
     if (powershellPath) {
-      return { path: powershellPath, name: 'powershell' };
+      return { path: powershellPath, name: 'powershell', args: ['-NoExit', '-NoLogo'] };
+    }
+
+    // Check Windows PowerShell common path
+    const systemRoot = process.env.SYSTEMROOT || 'C:\\Windows';
+    const builtinPowershell = path.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    if (fs.existsSync(builtinPowershell)) {
+      return { path: builtinPowershell, name: 'powershell', args: ['-NoExit', '-NoLogo'] };
     }
 
     // Fall back to cmd.exe
-    const cmdPath = path.join(process.env.SYSTEMROOT || 'C:\\Windows', 'System32', 'cmd.exe');
+    const cmdPath = path.join(systemRoot, 'System32', 'cmd.exe');
     if (fs.existsSync(cmdPath)) {
       return { path: cmdPath, name: 'cmd' };
     }
 
-    // Last resort
+    // Last resort - use cmd.exe without full path
     return { path: 'cmd.exe', name: 'cmd' };
   }
 
@@ -134,10 +152,15 @@ export class ShellDetector {
   private static findExecutable(name: string): string | null {
     const pathEnv = process.env.PATH || '';
     const pathDirs = pathEnv.split(path.delimiter);
+    const isWindows = process.platform === 'win32';
 
     for (const dir of pathDirs) {
       const fullPath = path.join(dir, name);
       if (fs.existsSync(fullPath)) {
+        // On Windows, skip X_OK check as it doesn't apply to .exe files
+        if (isWindows) {
+          return fullPath;
+        }
         try {
           fs.accessSync(fullPath, fs.constants.X_OK);
           return fullPath;
